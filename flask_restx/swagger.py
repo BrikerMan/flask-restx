@@ -389,6 +389,11 @@ class Swagger(object):
             if doc[method] is False or methods and method not in methods:
                 continue
             path[method] = self.serialize_operation(doc, method)
+            
+            # Allow overwrite docstring using raw json dict
+            # https://github.com/python-restx/flask-restx/issues/48
+            if doc[method].get('raw_doc'):
+                path[method].update(doc[method])
             path[method]['tags'] = [ns.name]
         return not_none(path)
 
