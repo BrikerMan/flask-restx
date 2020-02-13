@@ -392,8 +392,9 @@ class Swagger(object):
 
             # Allow overwrite docstring using raw json dict
             # https://github.com/python-restx/flask-restx/issues/48
-            if doc[method].get('raw_doc'):
-                path[method].update(doc[method])
+            raw_doc_keys = doc[method].pop('raw_doc_keys', [])
+            for key in raw_doc_keys:
+                path[method][key] = doc[method][key]
             path[method]['tags'] = [ns.name]
         return not_none(path)
 

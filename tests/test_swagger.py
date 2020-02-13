@@ -46,15 +46,15 @@ class SwaggerTest(object):
 
     def test_specs_endpoint_info(self, app, client):
         api = restx.Api(version='1.0',
-            title='My API',
-            description='This is a testing API',
-            terms_url='http://somewhere.com/terms/',
-            contact='Support',
-            contact_url='http://support.somewhere.com',
-            contact_email='contact@somewhere.com',
-            license='Apache 2.0',
-            license_url='http://www.apache.org/licenses/LICENSE-2.0.html'
-        )
+                        title='My API',
+                        description='This is a testing API',
+                        terms_url='http://somewhere.com/terms/',
+                        contact='Support',
+                        contact_url='http://support.somewhere.com',
+                        contact_email='contact@somewhere.com',
+                        license='Apache 2.0',
+                        license_url='http://www.apache.org/licenses/LICENSE-2.0.html'
+                        )
         api.init_app(app)
 
         data = client.get_specs()
@@ -81,15 +81,15 @@ class SwaggerTest(object):
     def test_specs_endpoint_info_delayed(self, app, client):
         api = restx.Api(version='1.0')
         api.init_app(app,
-            title='My API',
-            description='This is a testing API',
-            terms_url='http://somewhere.com/terms/',
-            contact='Support',
-            contact_url='http://support.somewhere.com',
-            contact_email='contact@somewhere.com',
-            license='Apache 2.0',
-            license_url='http://www.apache.org/licenses/LICENSE-2.0.html'
-        )
+                     title='My API',
+                     description='This is a testing API',
+                     terms_url='http://somewhere.com/terms/',
+                     contact='Support',
+                     contact_url='http://support.somewhere.com',
+                     contact_email='contact@somewhere.com',
+                     license='Apache 2.0',
+                     license_url='http://www.apache.org/licenses/LICENSE-2.0.html'
+                     )
 
         data = client.get_specs()
 
@@ -115,15 +115,15 @@ class SwaggerTest(object):
 
     def test_specs_endpoint_info_callable(self, app, client):
         api = restx.Api(version=lambda: '1.0',
-            title=lambda: 'My API',
-            description=lambda: 'This is a testing API',
-            terms_url=lambda: 'http://somewhere.com/terms/',
-            contact=lambda: 'Support',
-            contact_url=lambda: 'http://support.somewhere.com',
-            contact_email=lambda: 'contact@somewhere.com',
-            license=lambda: 'Apache 2.0',
-            license_url=lambda: 'http://www.apache.org/licenses/LICENSE-2.0.html'
-        )
+                        title=lambda: 'My API',
+                        description=lambda: 'This is a testing API',
+                        terms_url=lambda: 'http://somewhere.com/terms/',
+                        contact=lambda: 'Support',
+                        contact_url=lambda: 'http://support.somewhere.com',
+                        contact_email=lambda: 'contact@somewhere.com',
+                        license=lambda: 'Apache 2.0',
+                        license_url=lambda: 'http://www.apache.org/licenses/LICENSE-2.0.html'
+                        )
         api.init_app(app)
 
         data = client.get_specs()
@@ -1152,6 +1152,71 @@ class SwaggerTest(object):
         assert parameters['bool-array']['type'] == 'array'
         assert parameters['bool-array']['items']['type'] == 'boolean'
 
+    def test_doc_overwrite(self, api, client):
+        doc_consumes = ["application/json"]
+        doc_parameters = [
+            {
+                "in": "body",
+                "name": "user",
+                "description": "The user to create.",
+                "schema": {
+                    "type": "object",
+                    "required": [
+                        "userName"
+                    ],
+                    "properties": {
+                        "userName": {
+                            "type": "string"
+                        },
+                        "firstName": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        ]
+
+        api.model('ErrorModel', {
+            'message': restx.fields.String,
+        })
+
+        @api.route('/test/')
+        class ByNameResource(restx.Resource):
+            @api.doc(
+                raw_doc_keys=['consumes', 'parameters'],
+                consumes=doc_consumes,
+                parameters=doc_parameters,
+                responses={
+                    404: 'Not found',
+                    405: ('Some message', 'ErrorModel')}
+            )
+            def post(self):
+                return {}
+
+        data = client.get_specs('')
+        paths = data['paths']
+        assert len(paths.keys()) == 1
+
+        op = paths['/test/']['post']
+
+        assert op['consumes'] == doc_consumes
+        assert op['parameters'] == doc_parameters
+        assert op['tags'] == ['default']
+        assert op['responses'] == {
+            '404': {
+                'description': 'Not found',
+            },
+            '405': {
+                'description': 'Some message',
+                'schema': {
+                    '$ref': '#/definitions/ErrorModel',
+                }
+            }
+        }
+
+        assert 'definitions' in data
+        assert 'ErrorModel' in data['definitions']
+
     def test_response_on_method(self, api, client):
         api.model('ErrorModel', {
             'message': restx.fields.String,
@@ -1425,17 +1490,17 @@ class SwaggerTest(object):
         assert description('get') == dedent('''\
             Parent description.
             Some details'''
-        )
+                                            )
 
         assert description('post') == dedent('''\
             Parent description.
             Extra description'''
-        )
+                                             )
 
         assert description('delete') == dedent('''\
             Parent description.
             A delete operation'''
-        )
+                                               )
 
         assert description('put') == 'Parent description.'
         assert 'description' not in data['paths']['/descriptionless/']['get']
@@ -1692,9 +1757,9 @@ class SwaggerTest(object):
 
         path = data['paths']['/model-bad-uri/']
         assert path['get']['responses']['200']['schema']['$ref'] == \
-            '#/definitions/Person%2F%2F%3Flots%7B%7D%20of%20%26illegals%40%60'
+               '#/definitions/Person%2F%2F%3Flots%7B%7D%20of%20%26illegals%40%60'
         assert path['post']['responses']['201']['schema']['$ref'] == \
-            '#/definitions/Person%2F%2F%3Flots%7B%7D%20of%20%26illegals%40%60'
+               '#/definitions/Person%2F%2F%3Flots%7B%7D%20of%20%26illegals%40%60'
 
     def test_marchal_decorator_with_code(self, api, client):
         fields = api.model('Person', {
@@ -2106,6 +2171,7 @@ class SwaggerTest(object):
         This tests that the swagger.json document will not be written with duplicate object keys
         due to the coercion of dict keys to string. The last @api.response should win.
         '''
+
         # Note the use of a strings '404' and '200' in class decorators as opposed to ints in method decorators.
         @api.response('404', 'Not Found')
         class BaseResource(restx.Resource):
@@ -2789,12 +2855,12 @@ class SwaggerTest(object):
         }
 
         api = restx.Api(app,
-            security={
-                'oauth2': 'read',
-                'implicit': ['read', 'write']
-            },
-            authorizations=security_definitions
-        )
+                        security={
+                            'oauth2': 'read',
+                            'implicit': ['read', 'write']
+                        },
+                        authorizations=security_definitions
+                        )
 
         @api.route('/authorizations/')
         class ModelAsDict(restx.Resource):
