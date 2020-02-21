@@ -20,6 +20,7 @@ from types import MethodType
 
 from flask import url_for, request, current_app
 from flask import make_response as original_flask_make_response
+from flask import Response
 from flask.helpers import _endpoint_from_view_func
 from flask.signals import got_request_exception
 
@@ -641,6 +642,9 @@ class Api(object):
                 headers = e.get_response().headers
             elif self._default_error_handler:
                 result = self._default_error_handler(e)
+                # Directly returns when error handler return a Response object
+                if isinstance(result, Response):
+                    return result
                 default_data, code, headers = unpack(result, HTTPStatus.INTERNAL_SERVER_ERROR)
             else:
                 code = HTTPStatus.INTERNAL_SERVER_ERROR
